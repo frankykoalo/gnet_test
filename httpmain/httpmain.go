@@ -24,9 +24,13 @@ func main() {
 		os.Exit(1)
 	}
 	ss := dollars.NewSqlServer(db)
+
 	http.HandleFunc("/list", func(w http.ResponseWriter, r *http.Request) {
 		d := dollars.ListServer(*ss)
-		j, _ := json.MarshalIndent(d, "", "  ")
+		j, err := json.MarshalIndent(d, "", "  ")
+		if err != nil {
+			log.Fatalf("Marshal failed,%v\n ", err)
+		}
 		fmt.Fprintf(w, string(j))
 	})
 
@@ -36,9 +40,24 @@ func main() {
 		body, err := ioutil.ReadAll(r.Body)
 		var a model.Dollar
 		if err = json.Unmarshal(body, &a); err != nil {
-			fmt.Printf("Unmarshal err,%v\n", err)
+			log.Fatalf("Unmarshal err,%v\n", err)
 		}
 		dollars.InsertServer(a.Item, a.Price, *ss)
+	})
+
+	http.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		fmt.Printf(r.Method)
+		body, err := ioutil.ReadAll(r.Body)
+		var a struct {
+			Item string `json:"item"`
+		}
+		if err = json.Unmarshal(body, &a); err != nil {
+			log.Fatalf("Unmarshal err,%v\n", err)
+		}
+		d := dollars.GetDataServer(a.Item, *ss)
+		j, _ := json.MarshalIndent(d, "", "  ")
+		fmt.Fprintf(w, string(j))
 	})
 
 	ghttp.ListenAndServe(":8080", nil)

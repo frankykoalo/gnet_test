@@ -22,11 +22,3 @@ func (ss *SqlServer) InsertData() (stmt *sql.Stmt, err error) {
 	}
 	return
 }
-
-func (ss *SqlServer) GetSpecifiedData() (stmt *sql.Stmt, err error) {
-	stmt, err = ss.Db.Prepare("select price from dollar where item = ?")
-	if err != nil {
-		panic(err)
-	}
-	return
-}

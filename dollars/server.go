@@ -23,3 +23,11 @@ func ListServer(ss SqlServer) (d []model.Dollar) {
 	}
 	return
 }
+
+func GetDataServer(item string, ss SqlServer) (d []model.Dollar) {
+	err := ss.Db.Select(&d, "select item, price from dollar where item = ? ", item)
+	if err != nil {
+		log.Fatalf("%s", err)
+	}
+	return
+}
