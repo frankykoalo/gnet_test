@@ -12,7 +12,7 @@ import (
 )
 
 func HttpHandler(ss dollars.SqlServer) {
-	http.HandleFunc("/list", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/1/api/list", func(w http.ResponseWriter, r *http.Request) {
 		d := dollars.ListServer(ss)
 		j, err := json.MarshalIndent(d, "", "  ")
 		if err != nil {
@@ -21,7 +21,7 @@ func HttpHandler(ss dollars.SqlServer) {
 		fmt.Fprintf(w, string(j))
 	})
 
-	http.HandleFunc("/add", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/1/api/add", func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		fmt.Printf(r.Method)
 		body, err := ioutil.ReadAll(r.Body)
@@ -30,10 +30,13 @@ func HttpHandler(ss dollars.SqlServer) {
 			log.Fatalf("Unmarshal err,%v\n", err)
 		}
 		p, _ := strconv.ParseFloat(a.Price, 32)
-		dollars.InsertServer(a.Item, float32(p), ss)
+		err = dollars.InsertServer(a.Item, float32(p), ss)
+		if err != nil {
+			log.Fatalf("Add item failed, %v", err)
+		}
 	})
 
-	http.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/1/api/search", func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		fmt.Printf(r.Method)
 		body, err := ioutil.ReadAll(r.Body)
@@ -48,7 +51,7 @@ func HttpHandler(ss dollars.SqlServer) {
 		fmt.Fprintf(w, string(j))
 	})
 
-	http.HandleFunc("/delete", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/1/api/delete", func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		fmt.Printf(r.Method)
 		body, err := ioutil.ReadAll(r.Body)
@@ -70,7 +73,7 @@ func HttpHandler(ss dollars.SqlServer) {
 		fmt.Fprintf(w, string(j))
 	})
 
-	http.HandleFunc("/update", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/1/api/update", func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		fmt.Printf(r.Method)
 		body, err := ioutil.ReadAll(r.Body)
@@ -90,4 +93,19 @@ func HttpHandler(ss dollars.SqlServer) {
 		j, _ := json.MarshalIndent(d, "", "  ")
 		fmt.Fprintf(w, string(j))
 	})
+
+	http.HandleFunc("/1/api/average", func(w http.ResponseWriter, r *http.Request) {
+		d := dollars.ListServer(ss)
+		sum := make(map[string]float32, 1)
+		sum["average"] = 0
+		for _, v := range d {
+			price, _ := strconv.ParseFloat(v.Price, 32)
+			sum["average"] += float32(price)
+		}
+		sum["average"] = sum["average"] / float32(len(d))
+		result, _ := json.MarshalIndent(sum, "", "  ")
+		fmt.Fprintf(w, string(result))
+	})
+	ListenAndServe(":10232", nil)
+
 }
