@@ -9,6 +9,9 @@ import (
 type SqlServer struct {
 	Db *sqlx.DB
 }
+type Tps struct {
+	content []byte
+}
 
 func NewSqlServer(db *sqlx.DB) *SqlServer {
 	return &SqlServer{

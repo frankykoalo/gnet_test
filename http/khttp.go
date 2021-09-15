@@ -106,6 +106,14 @@ func HttpHandler(ss dollars.SqlServer) {
 		result, _ := json.MarshalIndent(sum, "", "  ")
 		fmt.Fprintf(w, string(result))
 	})
+
+	http.HandleFunc("/api/1/explorer/updateTps", func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		body, _ := ioutil.ReadAll(r.Body)
+		fmt.Println(string(body))
+		fmt.Fprintf(w, string(body))
+	})
+
 	ListenAndServe(":10232", nil)
 
 }
