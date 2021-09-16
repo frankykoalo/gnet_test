@@ -10,6 +10,7 @@ import (
 )
 
 func TestJson(t *testing.T) {
+	fmt.Println(time.Now())
 	heartbeatInterval := time.NewTicker(5 * time.Second)
 
 	defer heartbeatInterval.Stop()

@@ -1,4 +1,4 @@
-package main
+package echo
 
 import (
 	"fmt"
@@ -42,7 +42,7 @@ func (ts *testServer) React(frame []byte, c gnet.Conn) (out []byte, action gnet.
 
 }
 
-func main() {
+func EchoClient() {
 	a := fmt.Sprintf("tcp://:%d", 9000)
 	test := &testServer{
 		addr:      a,
