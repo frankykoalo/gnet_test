@@ -129,10 +129,10 @@ func HttpHandler(ss server.SqlServer) {
 			BlockTime   time.Time `json:"block_time"`
 		}
 		for _, v := range b {
-			content, _ = hex.DecodeString(v.BlockContent)
+			content, _ = hex.DecodeString(v.Block_Content)
 			block = commonstructs.DecodeBlock(content)
 			a, _ := json.MarshalIndent(blockwithoutcontent{v.Id, v.Height,
-				v.Parent, v.LastKeyUnit, v.BlockTime}, "", "  ")
+				v.Parent, v.Last_Key_Unit, v.Block_Time}, "", "  ")
 			c, _ := json.MarshalIndent(block, "", "  ")
 			fmt.Fprintf(w, string(a))
 			fmt.Fprintf(w, string(c))
@@ -147,8 +147,10 @@ func HttpHandler(ss server.SqlServer) {
 
 	http.HandleFunc("/api/1/explorer/consumeNewBlock", func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
-		body, _ := ioutil.ReadAll(r.Body)
-		fmt.Printf("consume a new block , %s\n", body)
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			log.Fatalf("can't read request's body , err:%s\n", err)
+		}
 		url := fmt.Sprintf("http://%s/api/1/explorer/updateblockinfo", "127.0.0.1:16666")
 		req, err := http.NewRequest("POST", url, nil)
 		if err != nil {
@@ -159,6 +161,7 @@ func HttpHandler(ss server.SqlServer) {
 		client := &http.Client{}
 		res, _ := client.Do(req)
 		res.Body.Close()
+		fmt.Fprintf(w, string(body))
 	})
 	ListenAndServe(":16666", nil)
 
