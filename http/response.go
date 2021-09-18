@@ -20,7 +20,7 @@ func init() {
 
 type GResponse struct {
 	handlerHeader http.Header
-	body          *bytes.Buffer
+	Body          *bytes.Buffer
 	contentLength int64
 	status        int
 }
@@ -28,7 +28,7 @@ type GResponse struct {
 func NewGResponse() *GResponse {
 	return &GResponse{
 		handlerHeader: make(http.Header),
-		body:          bytes.NewBuffer(make([]byte, 0)),
+		Body:          bytes.NewBuffer(make([]byte, 0)),
 		contentLength: 0,
 		status:        200,
 	}
@@ -48,7 +48,7 @@ func (resp *GResponse) Bytes() []byte {
 	if ct := resp.handlerHeader.Get("Content-Type"); ct == "" {
 		resp.handlerHeader.Set("Content-Type", "text/json")
 	}
-	bodyBytes := resp.body.Bytes()
+	bodyBytes := resp.Body.Bytes()
 	if cl := resp.handlerHeader.Get("Content-Length"); cl == "" {
 		contentLengthStr := fmt.Sprintf("%d", len(bodyBytes))
 		resp.handlerHeader.Set("Content-Length", contentLengthStr)
@@ -75,7 +75,7 @@ func (res *GResponse) Header() http.Header {
 }
 
 func (res *GResponse) Write(b []byte) (n int, err error) {
-	return res.body.Write(b)
+	return res.Body.Write(b)
 }
 
 func (res *GResponse) WriteHeader(statusCode int) {

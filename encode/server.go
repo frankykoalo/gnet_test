@@ -37,12 +37,6 @@ func (ps *pushServer) OnClosed(c gnet.Conn, err error) (action gnet.Action) {
 
 func (ps *pushServer) Tick() (delay time.Duration, action gnet.Action) {
 	log.Println(" ")
-	ps.connectedSockets.Range(func(key, value interface{}) bool {
-		addr := key.(string)
-		c := value.(gnet.Conn)
-		c.AsyncWrite([]byte(addr))
-		return true
-	})
 	delay = ps.tick
 	return
 }

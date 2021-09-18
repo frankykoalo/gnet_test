@@ -2,12 +2,12 @@ package encode
 
 import (
 	"fmt"
-	"github.com/sammyne/base58"
 	"net"
 	"time"
 )
 
 func StartClient(addr string) {
+
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		panic(err)
@@ -20,7 +20,7 @@ func StartClient(addr string) {
 	for {
 		b = append(b, byte(i))
 		_, err = conn.Write(b)
-		fmt.Printf("Send data is %v\n", string(b))
+		fmt.Printf("Send data is %s\n", string(b))
 		if err != nil {
 			fmt.Printf("%s", err)
 			break
@@ -30,8 +30,8 @@ func StartClient(addr string) {
 			fmt.Printf("%s", err)
 			break
 		}
-		result := base58.CheckEncodeX(bytes)
-		fmt.Printf("Receive data is %v\n", result)
+		result := string(bytes)
+		fmt.Printf("Receive data is %s\n", result)
 		if i < 122 {
 			time.Sleep(3 * time.Second)
 			i++
