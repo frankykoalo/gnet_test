@@ -15,6 +15,7 @@ type GServer struct {
 	*gnet.EventServer
 	pool    *goroutine.Pool
 	handler http.Handler
+	server  *http.Server
 }
 
 func (s *GServer) OnInitComplete(srv gnet.Server) (action gnet.Action) {
@@ -38,7 +39,6 @@ func (s *GServer) React(frame []byte, c gnet.Conn) (out []byte, action gnet.Acti
 		action = gnet.Close
 		return
 	}
-	// handle the request
 	req, err := http.ReadRequest(bufio.NewReader(bytes.NewBuffer(frame)))
 	if err != nil {
 		out = InternalErrorServerResponseBytes

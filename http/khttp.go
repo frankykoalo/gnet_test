@@ -146,6 +146,7 @@ func HttpHandler(ss server.SqlServer) {
 	})
 
 	http.HandleFunc("/api/1/explorer/consumeNewBlock", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("consume a new block")
 		r.ParseForm()
 		body, _ := ioutil.ReadAll(r.Body)
 		body, err := json.MarshalIndent(body, "", "  ")
@@ -153,17 +154,6 @@ func HttpHandler(ss server.SqlServer) {
 			log.Fatalf("can't mashal block body, err:%s\n", err)
 		}
 		fmt.Fprintf(w, string(body))
-		url := fmt.Sprintf("http://%s/api/1/explorer/updateblockinfo", "127.0.0.1:16666")
-		req, err := http.NewRequest("POST", url, nil)
-		if err != nil {
-			log.Fatalf(" can't create http request for data notification, err : %s", err.Error())
-			return
-		}
-		req.Header.Set("Content-Type", "application/json")
-		client := &http.Client{}
-		res, _ := client.Do(req)
-		res.Body.Close()
 	})
-	ListenAndServe(":16666", nil)
-
+	http.ListenAndServeTLS(":16666", "D:/server.crt", "D:/server.key", nil)
 }

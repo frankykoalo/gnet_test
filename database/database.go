@@ -16,6 +16,7 @@ func ConnectDatabase() (ss *server.SqlServer) {
 		log.Fatalf(" can't open database ,%s , system will quit ... ", err.Error())
 		os.Exit(1)
 	}
+	fmt.Println("Database connect success")
 	ss = server.NewSqlServer(db)
 	return
 }
