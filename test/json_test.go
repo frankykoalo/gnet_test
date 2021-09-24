@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -24,7 +25,7 @@ func TestJson(t *testing.T) {
 			url := fmt.Sprintf("https://%s/api/1/explorer/updateTps", "127.0.0.1:16666")
 			body := fmt.Sprintf("{\"tps\":\"%d\"}", tps)
 
-			fmt.Printf(" will send data to url : %s , tps : %d", url, tps)
+			fmt.Printf(" will send data to url : %s ,tps : %d\n", url, tps)
 			req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(body)))
 			if err != nil {
 				log.Fatalf(" can't create http request for data notification, err : %s", err.Error())
@@ -43,7 +44,10 @@ func TestJson(t *testing.T) {
 				log.Fatalf(" can't notification data to DAG-Explorer, err: %s", err.Error())
 				continue
 			}
+			resp, _ := ioutil.ReadAll(res.Body)
 			res.Body.Close()
+
+			fmt.Printf("%s\n", string(resp))
 		}
 	}
 }
