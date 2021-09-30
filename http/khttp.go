@@ -4,8 +4,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/SHDMT/gravity/platform/consensus/structure"
 	"github.com/SHDMT/gravity/platform/gpow/commonstructs"
 	"gnet_test/model"
+	_ "gnet_test/model"
 	"gnet_test/server"
 	"io/ioutil"
 	"log"
@@ -16,27 +18,33 @@ import (
 
 func HttpHandler(ss server.SqlServer) {
 	http.HandleFunc("/api/1/list", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("content-type", "text/json")
 		d := server.ListServer(ss)
-		j, err := json.MarshalIndent(d, "", "  ")
-		if err != nil {
-			log.Fatalf("Marshal failed,%v\n ", err)
+		type out struct {
+			Id    int     `json:"id"`
+			Item  string  `json:"item"`
+			Price float32 `json:"price"`
 		}
-		fmt.Fprintf(w, string(j))
+		var a out
+		var con model.Content
+		for _, content := range d {
+			decodeStr, _ := hex.DecodeString(content.Content)
+			json.Unmarshal(decodeStr, &con)
+			a.Id = content.Id
+			a.Item = con.Item
+			a.Price = con.Price
+			j, _ := json.MarshalIndent(&a, "", "  ")
+			fmt.Fprintf(w, string(j))
+			fmt.Fprintf(w, "\n")
+		}
 	})
 
 	http.HandleFunc("/api/1/add", func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
-		fmt.Printf(r.Method)
-		body, err := ioutil.ReadAll(r.Body)
-		var a model.Dollar
-		if err = json.Unmarshal(body, &a); err != nil {
-			log.Fatalf("Unmarshal err,%v\n", err)
-		}
-		p, _ := strconv.ParseFloat(a.Price, 32)
-		err = server.InsertServer(a.Item, float32(p), ss)
-		if err != nil {
-			log.Fatalf("Add item failed, %v", err)
-		}
+		body, _ := ioutil.ReadAll(r.Body)
+		var content model.Content
+		json.Unmarshal(body, &content)
+		server.InsertServer(content, ss)
 	})
 
 	http.HandleFunc("/api/1/search", func(w http.ResponseWriter, r *http.Request) {
@@ -97,20 +105,7 @@ func HttpHandler(ss server.SqlServer) {
 		fmt.Fprintf(w, string(j))
 	})
 
-	http.HandleFunc("/api/1/average", func(w http.ResponseWriter, r *http.Request) {
-		d := server.ListServer(ss)
-		sum := make(map[string]float32, 1)
-		sum["average"] = 0
-		for _, v := range d {
-			price, _ := strconv.ParseFloat(v.Price, 32)
-			sum["average"] += float32(price)
-		}
-		sum["average"] = sum["average"] / float32(len(d))
-		result, _ := json.MarshalIndent(sum, "", "  ")
-		fmt.Fprintf(w, string(result))
-	})
-
-	http.HandleFunc("/api/1/explorer/updateTps", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/api/1/explorer/updatetps", func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		body, _ := ioutil.ReadAll(r.Body)
 		fmt.Println(string(body))
@@ -121,7 +116,7 @@ func HttpHandler(ss server.SqlServer) {
 		b := server.ListBlock(ss)
 		var block *commonstructs.Block
 		var content []byte
-		type blockwithoutcontent struct {
+		type blockWithoutContent struct {
 			Id          string    `json:"id"`
 			Height      int64     `json:"height"`
 			Parent      string    `json:"parent"`
@@ -131,11 +126,10 @@ func HttpHandler(ss server.SqlServer) {
 		for _, v := range b {
 			content, _ = hex.DecodeString(v.Block_Content)
 			block = commonstructs.DecodeBlock(content)
-			a, _ := json.MarshalIndent(blockwithoutcontent{v.Id, v.Height,
+			a, _ := json.MarshalIndent(blockWithoutContent{v.Id, v.Height,
 				v.Parent, v.Last_Key_Unit, v.Block_Time}, "", "  ")
 			c, _ := json.MarshalIndent(block, "", "  ")
-			fmt.Fprintf(w, string(a))
-			fmt.Fprintf(w, string(c))
+			fmt.Fprintf(w, string(a), string(c))
 		}
 	})
 
@@ -155,5 +149,22 @@ func HttpHandler(ss server.SqlServer) {
 		}
 		fmt.Fprintf(w, string(body))
 	})
-	http.ListenAndServeTLS(":16666", "D:/server.crt", "D:/server.key", nil)
+	http.HandleFunc("/api/1/explorer/listindexmessage", func(w http.ResponseWriter, r *http.Request) {
+		var indexMessage structure.IndexMessage
+		type indexMessageWithoutContent struct {
+			Id          string `json:"id"`
+			UnitId      string `json:"unit_id"`
+			DataId      string `json:"data_id"`
+			DataVersion string `json:"data_version"`
+			BizCode     string `json:"biz_code"`
+		}
+		for _, im := range server.ListIndexMessage(ss) {
+			msgContent, _ := hex.DecodeString(im.MessageContent)
+			indexMessage.Deserialize(msgContent)
+			json.MarshalIndent(indexMessage, "", "  ")
+		}
+
+	})
+	fmt.Printf("Https server is listening on port %s\n", "16666")
+	http.ListenAndServe(":16666", nil)
 }

@@ -1,6 +1,8 @@
 package server
 
 import (
+	"encoding/hex"
+	"encoding/json"
 	"github.com/jmoiron/sqlx"
 	"gnet_test/model"
 	"log"
@@ -19,16 +21,15 @@ func NewSqlServer(db *sqlx.DB) *SqlServer {
 	}
 }
 
-func InsertServer(item string, price float32, ss SqlServer) (err error) {
-	_, err = ss.Db.Exec("insert into dollar(item,price,deleted) values (?,?,?)", item, price, 0)
-	if err != nil {
-		log.Fatalf("%s", err)
-	}
+func InsertServer(content model.Content, ss SqlServer) (err error) {
+	jsonByte, _ := json.Marshal(content)
+	encodeStr := hex.EncodeToString(jsonByte)
+	_, err = ss.Db.Exec("insert into dollar (content,deleted) values(?,0) ", encodeStr)
 	return
 }
 
 func ListServer(ss SqlServer) (d []model.Dollar) {
-	err := ss.Db.Select(&d, "select id,item,price from dollar where deleted = 0 order by price")
+	err := ss.Db.Select(&d, "select id,content from dollar where deleted = 0 ")
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
@@ -68,7 +69,7 @@ func UpdatePrice(id int, price float32, ss SqlServer) (err error) {
 }
 
 func ListBlock(ss SqlServer) (b []model.Block) {
-	err := ss.Db.Select(&b, "select * from block")
+	err := ss.Db.Select(&b, "select * from block order by block_time desc ")
 	if err != nil {
 		log.Fatalf("%s\n", err)
 	}
@@ -80,5 +81,19 @@ func ListChainStatus(ss SqlServer) (c []model.ChainStatus) {
 	if err != nil {
 		log.Fatalf("%s\n", err)
 	}
+	return
+}
+
+func ListMessage(ss SqlServer, msgType int) {
+	switch msgType {
+	case 0:
+		ListIndexMessage(ss)
+	case 1:
+	case 2:
+	case 3:
+	}
+}
+
+func ListIndexMessage(ss SqlServer) (im []model.IndexMessage) {
 	return
 }
